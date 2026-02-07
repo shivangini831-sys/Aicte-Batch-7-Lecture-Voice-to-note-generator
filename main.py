@@ -1,35 +1,44 @@
-import os
-import json
-import subprocess
-import wave
 import contextlib
+import json
+import os
+import subprocess
+import tempfile
+import wave
+
+import streamlit as st
 from vosk import Model, KaldiRecognizer
 
-# ---------------- CONFIG ----------------
-DATASET_DIR = "dataset"
-OUTPUT_DIR = "output"
-MODEL_PATH = "vosk-model"
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# ---------------- CONFIG ---------------- #
 
-# ---------------- LOAD MODEL ----------------
-print("Loading Vosk model...")
-model = Model(MODEL_PATH)
-print("Model loaded successfully.\n")
+DEFAULT_MODEL_PATH = os.getenv("VOSK_MODEL_PATH", "vosk-model")
 
-# ---------------- UTIL FUNCTIONS ----------------
-def convert_mp3_to_wav(mp3_path, wav_path):
+
+# ---------------- LOAD MODEL ---------------- #
+
+@st.cache_resource(show_spinner=False)
+def load_vosk_model(model_path: str) -> Model:
+    return Model(model_path)
+
+
+# ---------------- AUDIO PROCESSING ---------------- #
+
+def convert_audio_to_wav(input_path: str, wav_path: str) -> None:
     command = [
-        "ffmpeg", "-y",
-        "-i", mp3_path,
-        "-ac", "1",
-        "-ar", "16000",
-        wav_path
+        "ffmpeg",
+        "-y",
+        "-i",
+        input_path,
+        "-ac",
+        "1",
+        "-ar",
+        "16000",
+        wav_path,
     ]
     subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def transcribe_audio(wav_path):
+def transcribe_audio(model: Model, wav_path: str) -> str:
     with contextlib.closing(wave.open(wav_path, "rb")) as wf:
         rec = KaldiRecognizer(model, wf.getframerate())
         rec.SetWords(True)
@@ -40,6 +49,7 @@ def transcribe_audio(wav_path):
             data = wf.readframes(4000)
             if len(data) == 0:
                 break
+
             if rec.AcceptWaveform(data):
                 result = json.loads(rec.Result())
                 text_chunks.append(result.get("text", ""))
@@ -47,62 +57,148 @@ def transcribe_audio(wav_path):
         final_result = json.loads(rec.FinalResult())
         text_chunks.append(final_result.get("text", ""))
 
-    full_text = " ".join(text_chunks).strip()
-    return full_text
+    return " ".join(text_chunks).strip()
 
 
-def format_text(text):
-    # Break long text into readable sentences
-    words = text.split()
+# ---------------- TEXT CLEANING (IMPORTANT FIX) ---------------- #
+
+def format_text(text: str) -> str:
+    """
+    Cleans Vosk raw output and converts it into readable notes.
+    """
+
+    # 1. Remove very small junk tokens like: re, ge, pe
+    words = [w for w in text.split() if len(w) > 2]
+
+    # 2. Remove consecutive repeated words
+    cleaned_words = []
+    previous_word = None
+
+    for word in words:
+        if word != previous_word:
+            cleaned_words.append(word)
+        previous_word = word
+
+    # 3. Convert into bullet-style notes
     lines = []
     line = []
 
-    for word in words:
+    for word in cleaned_words:
         line.append(word)
-        if len(line) >= 12:
-            lines.append(" ".join(line))
+        if len(line) >= 10:
+            lines.append("• " + " ".join(line))
             line = []
 
     if line:
-        lines.append(" ".join(line))
+        lines.append("• " + " ".join(line))
 
     return "\n".join(lines)
 
 
-# ---------------- MAIN PROCESS ----------------
-print("Lecture Voice-to-Notes Generator\n")
+# ---------------- FEATURES ---------------- #
 
-for file in os.listdir(DATASET_DIR):
-    if not file.lower().endswith(".mp3"):
-        continue
-
-    print(f"🎧 Processing: {file}")
-
-    mp3_path = os.path.join(DATASET_DIR, file)
-    wav_path = os.path.join(DATASET_DIR, "temp.wav")
-
-    print("   🔄 Extracting audio...")
-    convert_mp3_to_wav(mp3_path, wav_path)
-
-    print("   📝 Transcribing...")
-    raw_text = transcribe_audio(wav_path)
+def generate_notes(model: Model, audio_path: str) -> str:
+    with tempfile.TemporaryDirectory() as temp_dir:
+        wav_path = os.path.join(temp_dir, "temp.wav")
+        convert_audio_to_wav(audio_path, wav_path)
+        raw_text = transcribe_audio(model, wav_path)
 
     if not raw_text.strip():
-        print("   ⚠️ No speech detected, skipping\n")
-        continue
+        return "No clear speech detected."
 
-    clean_text = format_text(raw_text)
+    cleaned_notes = format_text(raw_text)
+    return f"### Generated Notes\n\n{cleaned_notes}"
 
-    output_file = os.path.join(
-        OUTPUT_DIR,
-        os.path.splitext(file)[0] + ".txt"
+
+def generate_quiz(transcript: str) -> str:
+    if not transcript.strip():
+        return "No transcript available to build a quiz."
+
+    return (
+        "### Quiz\n\n"
+        "1. What is the main topic discussed in the lecture?\n"
+        "A) ...\n"
+        "B) ...\n\n"
+        "2. Which key concept is explained?\n"
+        "A) ...\n"
+        "B) ...\n"
     )
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(clean_text)
 
-    print(f"   ✅ Saved: {output_file}\n")
+def generate_flashcards(transcript: str) -> str:
+    if not transcript.strip():
+        return "No transcript available to build flashcards."
 
-    os.remove(wav_path)
+    return (
+        "### Flashcards\n\n"
+        "**Q:** What is the core concept of the lecture?\n"
+        "**A:** ...\n\n"
+        "**Q:** Why is this concept important?\n"
+        "**A:** ..."
+    )
 
-print("🎉 All files processed successfully!")
+
+# ---------------- STREAMLIT UI ---------------- #
+
+st.set_page_config(page_title="Audio Learning Assistant", layout="wide")
+
+st.title("Audio Learning Assistant")
+st.write("Upload lecture audio and generate clean notes, quizzes, and flashcards.")
+
+uploaded_file = st.file_uploader(
+    "Upload an audio file",
+    type=["mp3", "wav", "m4a"],
+)
+
+audio_path = None
+transcript_cache = None
+
+if uploaded_file:
+    st.success("Audio uploaded successfully.")
+
+    temp_dir = tempfile.mkdtemp()
+    audio_path = os.path.join(temp_dir, uploaded_file.name)
+
+    with open(audio_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    st.audio(uploaded_file)
+
+st.subheader("Choose Action")
+
+col1, col2, col3 = st.columns(3)
+
+notes_clicked = col1.button("Generate Notes")
+quiz_clicked = col2.button("Generate Quiz")
+flash_clicked = col3.button("Generate Flashcards")
+
+st.subheader("Results")
+
+if notes_clicked:
+    if audio_path:
+        with st.spinner("Generating notes..."):
+            model = load_vosk_model(DEFAULT_MODEL_PATH)
+            st.markdown(generate_notes(model, audio_path))
+    else:
+        st.warning("Please upload audio first.")
+
+if quiz_clicked or flash_clicked:
+    if audio_path:
+        with st.spinner("Transcribing audio..."):
+            model = load_vosk_model(DEFAULT_MODEL_PATH)
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                wav_path = os.path.join(temp_dir, "temp.wav")
+                convert_audio_to_wav(audio_path, wav_path)
+                transcript_cache = transcribe_audio(model, wav_path)
+
+        if quiz_clicked:
+            st.markdown(generate_quiz(transcript_cache))
+
+        if flash_clicked:
+            st.markdown(generate_flashcards(transcript_cache))
+    else:
+        st.warning("Please upload audio first.")
+
+st.divider()
+st.caption("Built by Lecture to Voice Team")
