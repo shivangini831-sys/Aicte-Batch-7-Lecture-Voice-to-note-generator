@@ -1,7 +1,0 @@
-vosk-model/
-dataset/
-output/
-temp.wav
-__pycache__/
-.venv/
-
