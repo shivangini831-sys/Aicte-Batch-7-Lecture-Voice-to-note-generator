@@ -1,37 +1,43 @@
 Lecture Voice to Notes Generator
-Abstract
+1. Abstract
 
-The Lecture Voice to Notes Generator is an AI-based web application developed to convert recorded lecture audio into structured text notes. The system utilizes speech recognition technology to transcribe spoken content into readable text, reducing the manual effort required for note-taking. The application is built using Python and Streamlit and integrates the Vosk speech recognition model for offline processing.
+The Lecture Voice to Notes Generator is an AI-based web application developed to convert recorded lecture audio into structured text notes. The system utilizes speech recognition technology to transcribe spoken content into readable text. It reduces manual effort and improves efficiency in note-taking. The application is built using Python and Streamlit and integrates the Vosk speech recognition model for offline transcription.
 
-Introduction
+2. Introduction
 
-In academic environments, students often find it difficult to take notes while simultaneously understanding lecture content. This project addresses that problem by automatically converting lecture audio into text. The system processes audio input and generates structured notes that can be saved for future reference.
+In academic environments, students often struggle to take complete and accurate notes while listening to lectures. Manual note-taking can result in missing important information. This project provides an automated solution that converts lecture audio into written text efficiently. The application is designed to be simple, user-friendly, and accessible to students.
 
-The application is designed to be simple, efficient, and user-friendly, making it accessible to students with minimal technical knowledge.
+3. Problem Statement
 
-Problem Statement
+Students face difficulty in capturing complete lecture content while writing notes manually. There is a need for a system that can automatically convert lecture speech into text to ensure accurate and complete documentation.
 
-Students face challenges in writing notes during live or recorded lectures. Manual note-taking can lead to incomplete or inaccurate documentation of important concepts. There is a need for an automated system that converts lecture speech into written text efficiently and accurately.
+4. Proposed Solution
 
-Proposed Solution
+The proposed system accepts a lecture audio file as input and processes it using a speech recognition model. The application converts speech into text format and displays the transcribed content on the interface. The generated notes are also saved as text files for future reference.
 
-The proposed system accepts a lecture audio file as input and processes it using a speech recognition model. The application converts the audio into text format and displays the transcribed content on the interface. The generated notes are also saved in a text file for future use.
+5. Objectives
 
-Key Features
+To develop a system that converts lecture voice into text.
 
-Upload lecture audio files
+To simplify the note-taking process for students.
 
-Convert speech to text automatically
+To implement speech recognition in a practical application.
 
-Generate readable and structured notes
+To build an interactive and user-friendly web interface.
 
-Save transcribed text in output files
+6. Key Features
 
-Simple and interactive user interface
+Upload lecture audio files.
 
-Offline speech recognition support
+Automatic speech-to-text conversion.
 
-Technologies Used
+Generate readable and structured notes.
+
+Save transcribed text in output files.
+
+Offline speech recognition support.
+
+7. Technologies Used
 
 Programming Language: Python
 
@@ -51,7 +57,7 @@ tempfile
 
 Version Control: Git and GitHub
 
-System Workflow
+8. System Workflow
 
 User uploads a lecture audio file.
 
@@ -65,32 +71,48 @@ The transcribed text is displayed on the screen.
 
 The output is saved as a text file in the output directory.
 
-Results
+9. Project Structure
+voice_lecture_to_notes/
+│
+├── main.py                  # Main Streamlit application
+├── requirements.txt         # Required dependencies
+├── vosk-model/              # Speech recognition model files
+├── output/                  # Generated notes
+└── README.md                # Project documentation
+10. How to Run the Application
+
+Execute the following command:
+
+streamlit run main.py
+
+The application will open in the default web browser.
+
+11. Results
 
 The system successfully converts lecture audio into readable text with satisfactory accuracy. It significantly reduces the time and effort required for manual note-taking.
 
-Future Scope
+12. Future Scope
 
-Integration of automatic text summarization
+Integration of automatic text summarization.
 
-Support for multiple languages
+Support for multiple languages.
 
-Improved punctuation and formatting
+Improved punctuation and formatting.
 
-Export notes in PDF format
+Export notes in PDF format.
 
-Real-time microphone recording support
+Real-time microphone recording support.
 
-Cloud-based deployment
+Cloud-based deployment.
 
-Learning Outcomes
+13. Learning Outcomes
 
-Implementation of speech recognition using Vosk
+Implementation of speech recognition using Vosk.
 
-Development of interactive web applications using Streamlit
+Development of interactive web applications using Streamlit.
 
-Audio processing and file handling in Python
+Audio processing and file handling in Python.
 
-Version control using Git and GitHub
+Version control using Git and GitHub.
 
-Practical experience in AI-based application development
+Practical experience in AI-based application development.
