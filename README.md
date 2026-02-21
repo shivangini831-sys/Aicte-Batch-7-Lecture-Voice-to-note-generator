@@ -1,4 +1,5 @@
-Lecture Voice to Notes Generator
+###Lecture Voice to Notes Generator###
+
 1. Abstract
 
 The Lecture Voice to Notes Generator is an AI-based web application developed to convert recorded lecture audio into structured text notes. The system uses speech recognition technology to transcribe spoken content into readable text. It reduces manual effort and improves efficiency in note-taking. The application is developed using Python and Streamlit and integrates the Vosk speech recognition model for offline transcription.
@@ -71,24 +72,6 @@ The transcribed text is displayed on the screen.
 
 The output is saved as a text file in the output directory.
 
-9. Project Structure
-
-voice_lecture_to_notes/
-
-│
-├── main.py (Main Streamlit application)
-├── requirements.txt (Required dependencies)
-├── vosk-model/ (Speech recognition model files)
-├── output/ (Generated notes)
-└── README.md (Project documentation)
-
-10. How to Run the Application
-
-Run the following command in the project directory:
-
-streamlit run main.py
-
-The application will open in your default web browser.
 
 11. Results
 
