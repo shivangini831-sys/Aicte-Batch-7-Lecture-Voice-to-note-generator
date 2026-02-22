@@ -76,7 +76,9 @@ The output is saved as a text file in the output directory.
 11. Results
 
 The system successfully converts lecture audio into readable text with satisfactory accuracy. It reduces the time and effort required for manual note-taking and improves productivity for students.
-https://shivangini831-sys-aicte-batch-7-lecture-voice-to-not-app-dgv447.streamlit.app/
+    
+      
+      Deployment Link https://shivangini831-sys-aicte-batch-7-lecture-voice-to-not-app-dgv447.streamlit.app/
 
 12. Future Scope
 
